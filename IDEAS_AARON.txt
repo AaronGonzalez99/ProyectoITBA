@@ -1,0 +1,18 @@
+while [ $contador -lt 10 ]; do
+    # Verificar si el archivo .log contiene "SUCCESSFULLY"
+    if grep -q "SUCCESSFULLY" "$archivo_log"; then
+        echo "Se encontró 'SUCCESSFULLY' en el archivo .log."
+        
+        # Aquí puedes continuar con el resto del código
+        # Por ejemplo, salir del bucle
+        break
+    else
+        echo "No se encontró 'SUCCESSFULLY' en el archivo .log en el intento $((contador+1))."
+        
+        # Incrementar el contador
+        ((contador++))
+        
+        # Aquí puedes agregar un comando de espera si lo deseas
+        # sleep 1  # Espera 1 segundo antes del siguiente intento
+    fi
+done
