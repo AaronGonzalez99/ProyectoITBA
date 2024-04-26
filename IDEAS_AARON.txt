@@ -16,3 +16,49 @@ while [ $contador -lt 10 ]; do
         # sleep 1  # Espera 1 segundo antes del siguiente intento
     fi
 done
+
+
+uat
+
+#!/bin/bash
+
+# Tu variable dinámica con las v's (por ejemplo: "v1,v2,v1,v3,v1")
+v_variable="v1,v2,v1,v3,v1"  # Puedes cambiar esta variable según tus necesidades
+repo_directory="/ruta/a/tu/repositorio"  # Cambia esto por la ruta a tu repositorio
+
+# Convertir la variable en un array separado por comas
+IFS=',' read -ra V_ARRAY <<< "$v_variable"
+
+# Iterar sobre el array y hacer el push por cada v1
+for v in "${V_ARRAY[@]}"; do
+    if [[ "$v" == "v1" ]]; then
+        # Descargar el archivo v1 (ajusta la URL según tu caso)
+        wget "https://tudominio.com/ruta/v1" -O "$repo_directory/v1"
+
+        # Añadir v1 al repositorio
+        cd "$repo_directory" || exit
+        git add v1
+        git commit -m "Añadido v1"
+        git push origin main  # Ajusta 'main' si tu rama principal tiene otro nombre
+    fi
+done
+
+echo "Proceso completado."
+Pasos a seguir:
+
+Reemplaza v_variable con tu variable dinámica que contiene las "v's".
+Reemplaza repo_directory con la ruta al directorio de tu repositorio.
+Ajusta la URL en el comando wget para descargar el archivo "v1".
+Asegúrate de que estás en la rama correcta (en este ejemplo, es main).
+Guarda este script en un archivo, por ejemplo push_v1.sh, y dale permisos de ejecución con chmod +x push_v1.sh. Luego, puedes ejecutarlo con ./push_v1.sh para llevar a cabo el proceso.
+
+Nota: Asegúrate de tener git y wget instalados en tu sistema antes de ejecutar el script.
+
+
+
+
+
+
+Message ChatGPT…
+
+ChatGPT can make mistakes. Consider checking important information.
