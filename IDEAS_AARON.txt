@@ -62,3 +62,13 @@ Nota: Asegúrate de tener git y wget instalados en tu sistema antes de ejecutar 
 Message ChatGPT…
 
 ChatGPT can make mistakes. Consider checking important information.
+÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷
+///////////////
+#!/bin/bash
+
+Objetos="v1,v2,v3,v4,v5"
+
+for objeto in $(echo $Objetos | tr ',' '\n')
+do
+    echo $objeto
+done
