@@ -72,3 +72,7 @@ for objeto in $(echo $Objetos | tr ',' '\n')
 do
     echo $objeto
 done
+
+
+############
+variable=$(echo "$variable" | sed 's/.\{13\}$//')
