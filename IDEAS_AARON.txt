@@ -14,39 +14,42 @@ if [ ! -f "$input_file" ]; then
     exit 1
 fi
 
-# Función para generar archivos YAML de salida para cada job
-generate_yaml_files() {
-    local jobs_data="$1"
-    local project="$2"
-    local timestamp="$3"
-    
-    # Itera sobre cada job en el bloque jobs
-    while IFS= read -r job; do
-        job_name=$(echo "$job" | grep -oP '^\s+name:\s+\K.*')
-        version=$(echo "$job" | grep -oP '^\s+version:\s+\K.*')
-        jira_id=$(echo "$job" | grep -oP '^\s+jira_id:\s+\K.*')
-        
-        # Genera el nombre del archivo de salida
-        output_file="${job_name}_${timestamp}.yml"
-        
-        # Crea el contenido del archivo YAML de salida
-        cat <<EOF > "$output_file"
+# Función para generar un archivo YAML de salida para un job específico
+generate_yaml_file() {
+    local project="$1"
+    local timestamp="$2"
+    local job_name="$3"
+    local version="$4"
+    local jira_id="$5"
+
+    # Genera el nombre del archivo de salida
+    output_file="${job_name}_${timestamp}.yml"
+
+    # Crea el contenido del archivo YAML de salida
+    cat <<EOF > "$output_file"
 project_name: $project
 job_name: $job_name
 fid: $jira_id
 version: $version
 EOF
-        
-        echo "Archivo generado: $output_file"
-    done <<< "$jobs_data"
-}
 
-# Extrae el bloque 'jobs' del archivo YAML de entrada
-jobs_block=$(sed -n '/^\s*jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
+    echo "Archivo generado: $output_file"
+}
 
 # Extrae el proyecto y el timestamp del archivo YAML de entrada
 project=$(grep -oP '^\s+project:\s+\K.*' "$input_file")
 timestamp=$(grep -oP '^\s+timestamp:\s+\K.*' "$input_file")
 
-# Llama a la función para generar los archivos YAML de salida por cada job
-generate_yaml_files "$jobs_block" "$project" "$timestamp"
+# Extrae cada job del bloque 'jobs' y genera el archivo YAML correspondiente
+while IFS= read -r line; do
+    if [[ "$line" =~ ^\s+name: ]]; then
+        job_name=$(echo "$line" | grep -oP '^\s+name:\s+\K.*')
+    elif [[ "$line" =~ ^\s+version: ]]; then
+        version=$(echo "$line" | grep -oP '^\s+version:\s+\K.*')
+    elif [[ "$line" =~ ^\s+jira_id: ]]; then
+        jira_id=$(echo "$line" | grep -oP '^\s+jira_id:\s+\K.*')
+
+        # Llama a la función para generar el archivo YAML de salida para este job
+        generate_yaml_file "$project" "$timestamp" "$job_name" "$version" "$jira_id"
+    fi
+done < <(sed -n '/^\s*jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
