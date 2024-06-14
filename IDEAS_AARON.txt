@@ -48,5 +48,5 @@ jobs_block=$(sed -n '/^\s*jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
 project=$(grep -oP '^\s+project:\s+\K.*' "$input_file")
 timestamp=$(grep -oP '^\s+timestamp:\s+\K.*' "$input_file")
 
-# Llama a la función para generar los archivos YAML de salida
+# Llama a la función para generar los archivos YAML de salida por cada job
 generate_yaml_files "$jobs_block" "$project" "$timestamp"
