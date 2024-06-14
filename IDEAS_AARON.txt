@@ -76,3 +76,50 @@ done
 
 ############
 variable=$(echo "$variable" | sed 's/.\{13\}$//')
+
+
+$$$$$$$$ Nueva tarea de Lse $$$$$$$
+
+#!/bin/bash
+
+# Ruta al archivo YAML de entrada
+input_file="input.yml"
+
+# Extraer el valor de project del archivo YAML
+project=$(grep 'project:' "$input_file" | awk '{print $2}')
+
+# Leer y procesar cada job en el archivo YAML
+awk '/jobs:/{flag=1;next}/---/{flag=0}flag' "$input_file" | sed 's/- name:/\n- name:/g' | grep -v 'jobs:' | while read -r job; do
+  if [[ $job =~ ^- ]]; then
+    if [ ! -z "$job_name" ]; then
+      # Escribir al archivo de salida
+      cat <<EOF >> "output.yml"
+project_name: $project
+job_name: $job_name
+fid: $jira_id
+version: $version
+---
+EOF
+    fi
+    job_name=$(echo "$job" | grep 'name:' | awk '{print $3}')
+    version=$(echo "$job" | grep 'version:' | awk '{print $2}')
+    jira_id=$(echo "$job" | grep 'jira_id:' | awk '{print $2}')
+  else
+    if [[ $job =~ name: ]]; then
+      job_name=$(echo "$job" | awk '{print $3}')
+    elif [[ $job =~ version: ]]; then
+      version=$(echo "$job" | awk '{print $2}')
+    elif [[ $job =~ jira_id: ]]; then
+      jira_id=$(echo "$job" | awk '{print $2}')
+    fi
+  fi
+done
+
+# Para el último job en el archivo
+cat <<EOF >> "output.yml"
+project_name: $project
+job_name: $job_name
+fid: $jira_id
+version: $version
+---
+EOF
