@@ -1,44 +1,43 @@
 #!/bin/bash
 
-# Variables
-INPUT_FILE="input.yml"  # Path to the input YAML file
-PROJECT_NAME="your_project_name"
-FID="your_fid"
-OUTPUT_DIR="./output_files"
-COMMIT_MESSAGE="Auto-generated YAML files with updated version"
+# Verifica que se haya proporcionado un archivo YAML de entrada como argumento
+if [ $# -eq 0 ]; then
+    echo "Uso: $0 archivo_de_entrada.yml"
+    exit 1
+fi
 
-# Create output directory if it doesn't exist
-mkdir -p $OUTPUT_DIR
+input_file="$1"
 
-# Extract jobs section from the YAML file
-jobs_section=$(awk '/jobs:/,/^$/' $INPUT_FILE)
+# Verifica que el archivo de entrada exista
+if [ ! -f "$input_file" ]; then
+    echo "Error: El archivo $input_file no existe."
+    exit 1
+fi
 
-# Extract individual job details
-job_entries=$(echo "$jobs_section" | awk '/- name:/ {print NR}' | tac)
-prev_line=$(echo "$jobs_section" | wc -l)
-for line in $job_entries; do
-    job_block=$(echo "$jobs_section" | sed -n "${line},${prev_line}p")
-    job_name=$(echo "$job_block" | grep 'name:' | awk '{print $2}')
-    job_version=$(echo "$job_block" | grep 'version:' | awk '{print $2}')
-    prev_line=$((line - 1))
+# Lee el archivo YAML de entrada
+config=$(awk '/^config:$/,/^---$/ { print }' "$input_file" | sed '1d;$d')
 
-    # Create new YAML content
-    new_yaml=$(cat <<EOF
-project_name: $PROJECT_NAME
+# Extrae los valores necesarios del archivo de entrada
+project=$(echo "$config" | awk '/^\s+project:/ { print $2 }')
+timestamp=$(echo "$config" | awk '/^\s+timestamp:/ { print $2 }')
+jobs=$(echo "$config" | awk '/^\s+jobs:/,/^$/' | sed '1d;$d')
+
+# Procesa cada job en la lista de jobs
+while IFS= read -r line; do
+    if [[ "$line" =~ ^\s+name: ]]; then
+        job_name=$(echo "$line" | awk '{ print $2 }')
+    elif [[ "$line" =~ ^\s+version: ]]; then
+        version=$(echo "$line" | awk '{ print $2 }')
+    elif [[ "$line" =~ ^\s+jira_id: ]]; then
+        jira_id=$(echo "$line" | awk '{ print $2 }')
+        # Genera el archivo YAML de salida para este job
+        output_file="${job_name}_${timestamp}.yml"
+        cat <<EOF > "$output_file"
+project_name: $project
 job_name: $job_name
-fid: $FID
-version: $job_version
+fid: $jira_id
+version: $version
 EOF
-    )
-
-    # Write the new YAML to a file
-    output_file="$OUTPUT_DIR/${job_name}_new.yml"
-    echo "$new_yaml" > "$output_file"
-
-    # Commit and push the new YAML file to the repository
-    cd $OUTPUT_DIR
-    git add "$output_file"
-    git commit -m "$COMMIT_MESSAGE"
-    git push
-    cd -
-done
+        echo "Archivo generado: $output_file"
+    fi
+done <<< "$jobs"
