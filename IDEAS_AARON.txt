@@ -14,17 +14,17 @@ if [ ! -f "$input_file" ]; then
     exit 1
 fi
 
-# Función para extraer datos de jobs y generar archivos YAML de salida
+# Función para generar archivos YAML de salida para cada job
 generate_yaml_files() {
-    local job_data="$1"
+    local jobs_data="$1"
     local project="$2"
     local timestamp="$3"
     
-    # Lee cada job del bloque jobs
-    while read -r line; do
-        job_name=$(echo "$line" | grep -Po '(?<=name: ).*')
-        version=$(echo "$line" | grep -Po '(?<=version: ).*')
-        jira_id=$(echo "$line" | grep -Po '(?<=jira_id: ).*')
+    # Itera sobre cada job en el bloque jobs
+    while IFS= read -r job; do
+        job_name=$(echo "$job" | grep -oP '^\s+name:\s+\K.*')
+        version=$(echo "$job" | grep -oP '^\s+version:\s+\K.*')
+        jira_id=$(echo "$job" | grep -oP '^\s+jira_id:\s+\K.*')
         
         # Genera el nombre del archivo de salida
         output_file="${job_name}_${timestamp}.yml"
@@ -38,15 +38,15 @@ version: $version
 EOF
         
         echo "Archivo generado: $output_file"
-    done <<< "$job_data"
+    done <<< "$jobs_data"
 }
 
 # Extrae el bloque 'jobs' del archivo YAML de entrada
-jobs_block=$(sed -n '/^ *jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
+jobs_block=$(sed -n '/^\s*jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
 
 # Extrae el proyecto y el timestamp del archivo YAML de entrada
-project=$(grep -Po '(?<=project: ).*' "$input_file")
-timestamp=$(grep -Po '(?<=timestamp: ).*' "$input_file")
+project=$(grep -oP '^\s+project:\s+\K.*' "$input_file")
+timestamp=$(grep -oP '^\s+timestamp:\s+\K.*' "$input_file")
 
 # Llama a la función para generar los archivos YAML de salida
 generate_yaml_files "$jobs_block" "$project" "$timestamp"
