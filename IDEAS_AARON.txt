@@ -1,125 +1,44 @@
-while [ $contador -lt 10 ]; do
-    # Verificar si el archivo .log contiene "SUCCESSFULLY"
-    if grep -q "SUCCESSFULLY" "$archivo_log"; then
-        echo "Se encontró 'SUCCESSFULLY' en el archivo .log."
-        
-        # Aquí puedes continuar con el resto del código
-        # Por ejemplo, salir del bucle
-        break
-    else
-        echo "No se encontró 'SUCCESSFULLY' en el archivo .log en el intento $((contador+1))."
-        
-        # Incrementar el contador
-        ((contador++))
-        
-        # Aquí puedes agregar un comando de espera si lo deseas
-        # sleep 1  # Espera 1 segundo antes del siguiente intento
-    fi
-done
-
-
-uat
-
 #!/bin/bash
 
-# Tu variable dinámica con las v's (por ejemplo: "v1,v2,v1,v3,v1")
-v_variable="v1,v2,v1,v3,v1"  # Puedes cambiar esta variable según tus necesidades
-repo_directory="/ruta/a/tu/repositorio"  # Cambia esto por la ruta a tu repositorio
+# Variables
+INPUT_FILE="input.yml"  # Path to the input YAML file
+PROJECT_NAME="your_project_name"
+FID="your_fid"
+OUTPUT_DIR="./output_files"
+COMMIT_MESSAGE="Auto-generated YAML files with updated version"
 
-# Convertir la variable en un array separado por comas
-IFS=',' read -ra V_ARRAY <<< "$v_variable"
+# Create output directory if it doesn't exist
+mkdir -p $OUTPUT_DIR
 
-# Iterar sobre el array y hacer el push por cada v1
-for v in "${V_ARRAY[@]}"; do
-    if [[ "$v" == "v1" ]]; then
-        # Descargar el archivo v1 (ajusta la URL según tu caso)
-        wget "https://tudominio.com/ruta/v1" -O "$repo_directory/v1"
+# Extract jobs section from the YAML file
+jobs_section=$(awk '/jobs:/,/^$/' $INPUT_FILE)
 
-        # Añadir v1 al repositorio
-        cd "$repo_directory" || exit
-        git add v1
-        git commit -m "Añadido v1"
-        git push origin main  # Ajusta 'main' si tu rama principal tiene otro nombre
-    fi
-done
+# Extract individual job details
+job_entries=$(echo "$jobs_section" | awk '/- name:/ {print NR}' | tac)
+prev_line=$(echo "$jobs_section" | wc -l)
+for line in $job_entries; do
+    job_block=$(echo "$jobs_section" | sed -n "${line},${prev_line}p")
+    job_name=$(echo "$job_block" | grep 'name:' | awk '{print $2}')
+    job_version=$(echo "$job_block" | grep 'version:' | awk '{print $2}')
+    prev_line=$((line - 1))
 
-echo "Proceso completado."
-Pasos a seguir:
-
-Reemplaza v_variable con tu variable dinámica que contiene las "v's".
-Reemplaza repo_directory con la ruta al directorio de tu repositorio.
-Ajusta la URL en el comando wget para descargar el archivo "v1".
-Asegúrate de que estás en la rama correcta (en este ejemplo, es main).
-Guarda este script en un archivo, por ejemplo push_v1.sh, y dale permisos de ejecución con chmod +x push_v1.sh. Luego, puedes ejecutarlo con ./push_v1.sh para llevar a cabo el proceso.
-
-Nota: Asegúrate de tener git y wget instalados en tu sistema antes de ejecutar el script.
-
-
-
-
-
-
-Message ChatGPT…
-
-ChatGPT can make mistakes. Consider checking important information.
-÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷
-///////////////
-#!/bin/bash
-
-Objetos="v1,v2,v3,v4,v5"
-
-for objeto in $(echo $Objetos | tr ',' '\n')
-do
-    echo $objeto
-done
-
-
-############
-variable=$(echo "$variable" | sed 's/.\{13\}$//')
-
-
-$$$$$$$$ Nueva tarea de Lse $$$$$$$
-
-#!/bin/bash
-
-# Ruta al archivo YAML de entrada
-input_file="input.yml"
-
-# Extraer el valor de project del archivo YAML
-project=$(grep 'project:' "$input_file" | awk '{print $2}')
-
-# Leer y procesar cada job en el archivo YAML
-awk '/jobs:/{flag=1;next}/---/{flag=0}flag' "$input_file" | sed 's/- name:/\n- name:/g' | grep -v 'jobs:' | while read -r job; do
-  if [[ $job =~ ^- ]]; then
-    if [ ! -z "$job_name" ]; then
-      # Escribir al archivo de salida
-      cat <<EOF >> "output.yml"
-project_name: $project
+    # Create new YAML content
+    new_yaml=$(cat <<EOF
+project_name: $PROJECT_NAME
 job_name: $job_name
-fid: $jira_id
-version: $version
----
+fid: $FID
+version: $job_version
 EOF
-    fi
-    job_name=$(echo "$job" | grep 'name:' | awk '{print $3}')
-    version=$(echo "$job" | grep 'version:' | awk '{print $2}')
-    jira_id=$(echo "$job" | grep 'jira_id:' | awk '{print $2}')
-  else
-    if [[ $job =~ name: ]]; then
-      job_name=$(echo "$job" | awk '{print $3}')
-    elif [[ $job =~ version: ]]; then
-      version=$(echo "$job" | awk '{print $2}')
-    elif [[ $job =~ jira_id: ]]; then
-      jira_id=$(echo "$job" | awk '{print $2}')
-    fi
-  fi
-done
+    )
 
-# Para el último job en el archivo
-cat <<EOF >> "output.yml"
-project_name: $project
-job_name: $job_name
-fid: $jira_id
-version: $version
----
-EOF
+    # Write the new YAML to a file
+    output_file="$OUTPUT_DIR/${job_name}_new.yml"
+    echo "$new_yaml" > "$output_file"
+
+    # Commit and push the new YAML file to the repository
+    cd $OUTPUT_DIR
+    git add "$output_file"
+    git commit -m "$COMMIT_MESSAGE"
+    git push
+    cd -
+done
