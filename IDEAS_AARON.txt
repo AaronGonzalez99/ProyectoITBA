@@ -3,23 +3,35 @@
 # Archivo de configuración inicial
 CONFIG_FILE="config.yml"
 
-# Leer el archivo de configuración y procesar cada job
-awk '/- name:/{flag=1;next}/^$/{flag=0}flag' $CONFIG_FILE | while read -r line; do
+# Asegurarnos de que el archivo existe
+if [[ ! -f $CONFIG_FILE ]]; then
+  echo "El archivo $CONFIG_FILE no existe."
+  exit 1
+fi
+
+# Leer el archivo y procesar cada job
+current_job_name=""
+current_version=""
+current_jira_id=""
+
+while IFS= read -r line; do
   if [[ $line =~ name:\ \"([^\"]+)\" ]]; then
-    job_name="${BASH_REMATCH[1]}"
+    current_job_name="${BASH_REMATCH[1]}"
   elif [[ $line =~ version:\ \"([^\"]+)\" ]]; then
-    version="${BASH_REMATCH[1]}"
+    current_version="${BASH_REMATCH[1]}"
   elif [[ $line =~ jira_id:\ \"([^\"]+)\" ]]; then
-    jira_id="${BASH_REMATCH[1]}"
+    current_jira_id="${BASH_REMATCH[1]}"
     
     # Crear archivo .yml para el job actual
-    job_file="${job_name}.yml"
-    echo "version: \"$version\"" > "$job_file"
-    echo "Archivo $job_file creado con version $version"
-
-    # Resetear variables para el siguiente job
-    job_name=""
-    version=""
-    jira_id=""
+    if [[ -n $current_job_name && -n $current_version && -n $current_jira_id ]]; then
+      job_file="${current_job_name}.yml"
+      echo "version: \"$current_version\"" > "$job_file"
+      echo "Archivo $job_file creado con version $current_version"
+      
+      # Resetear variables para el siguiente job
+      current_job_name=""
+      current_version=""
+      current_jira_id=""
+    fi
   fi
-done
+done < "$CONFIG_FILE"
