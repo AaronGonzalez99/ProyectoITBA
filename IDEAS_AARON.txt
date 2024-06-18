@@ -1,37 +1,10 @@
 #!/bin/bash
 
-# Archivo de configuración inicial
-CONFIG_FILE="config.yml"
+# Define la nueva versión
+nueva_version="2.0"  # Asigna el valor de la versión aquí
 
-# Asegurarnos de que el archivo existe
-if [[ ! -f $CONFIG_FILE ]]; then
-  echo "El archivo $CONFIG_FILE no existe."
-  exit 1
-fi
+# Archivo YAML a modificar
+archivo_yaml="ruta_al_archivo.yml"
 
-# Leer el archivo y procesar cada job
-current_job_name=""
-current_version=""
-current_jira_id=""
-
-while IFS= read -r line; do
-  if [[ $line =~ name:\ \"([^\"]+)\" ]]; then
-    current_job_name="${BASH_REMATCH[1]}"
-  elif [[ $line =~ version:\ \"([^\"]+)\" ]]; then
-    current_version="${BASH_REMATCH[1]}"
-  elif [[ $line =~ jira_id:\ \"([^\"]+)\" ]]; then
-    current_jira_id="${BASH_REMATCH[1]}"
-    
-    # Crear archivo .yml para el job actual
-    if [[ -n $current_job_name && -n $current_version && -n $current_jira_id ]]; then
-      job_file="${current_job_name}.yml"
-      echo "version: \"$current_version\"" > "$job_file"
-      echo "Archivo $job_file creado con version $current_version"
-      
-      # Resetear variables para el siguiente job
-      current_job_name=""
-      current_version=""
-      current_jira_id=""
-    fi
-  fi
-done < "$CONFIG_FILE"
+# Modifica el valor de "version" en el archivo YAML
+sed -i "s/^version: .*/version: ${nueva_version}/" "$archivo_yaml"
