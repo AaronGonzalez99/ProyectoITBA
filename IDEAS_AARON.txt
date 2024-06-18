@@ -1,55 +1,28 @@
 #!/bin/bash
 
-# Verifica que se haya proporcionado un archivo YAML de entrada como argumento
-if [ $# -eq 0 ]; then
-    echo "Uso: $0 archivo_de_entrada.yml"
-    exit 1
-fi
+# Archivo de configuración inicial
+CONFIG_FILE="config.yml"
 
-input_file="$1"
+# Leer el archivo de configuración
+jobs=$(awk '/jobs:/,0' $CONFIG_FILE)
 
-# Verifica que el archivo de entrada exista
-if [ ! -f "$input_file" ]; then
-    echo "Error: El archivo $input_file no existe."
-    exit 1
-fi
-
-# Función para generar un archivo YAML de salida para un job específico
-generate_yaml_file() {
-    local project="$1"
-    local timestamp="$2"
-    local job_name="$3"
-    local version="$4"
-    local jira_id="$5"
-
-    # Genera el nombre del archivo de salida
-    output_file="${job_name}_${timestamp}.yml"
-
-    # Crea el contenido del archivo YAML de salida
-    cat <<EOF > "$output_file"
-project_name: $project
-job_name: $job_name
-fid: $jira_id
-version: $version
-EOF
-
-    echo "Archivo generado: $output_file"
-}
-
-# Extrae el proyecto y el timestamp del archivo YAML de entrada
-project=$(grep -oP '^\s+project:\s+\K.*' "$input_file")
-timestamp=$(grep -oP '^\s+timestamp:\s+\K.*' "$input_file")
-
-# Extrae cada job del bloque 'jobs' y genera el archivo YAML correspondiente
+# Extraer y procesar cada job
 while IFS= read -r line; do
-    if [[ "$line" =~ ^\s+name: ]]; then
-        job_name=$(echo "$line" | grep -oP '^\s+name:\s+\K.*')
-    elif [[ "$line" =~ ^\s+version: ]]; then
-        version=$(echo "$line" | grep -oP '^\s+version:\s+\K.*')
-    elif [[ "$line" =~ ^\s+jira_id: ]]; then
-        jira_id=$(echo "$line" | grep -oP '^\s+jira_id:\s+\K.*')
+  if [[ $line =~ -[[:space:]]name:[[:space:]]\"([^\"]+)\" ]]; then
+    job_name="${BASH_REMATCH[1]}"
+  elif [[ $line =~ [[:space:]]*version:[[:space:]]\"([^\"]+)\" ]]; then
+    version="${BASH_REMATCH[1]}"
+  elif [[ $line =~ [[:space:]]*jira_id:[[:space:]]\"([^\"]+)\" ]]; then
+    jira_id="${BASH_REMATCH[1]}"
+    
+    # Crear archivo .yml para el job actual
+    job_file="${job_name}.yml"
+    echo "version: \"$version\"" > $job_file
+    echo "Archivo $job_file creado con version $version"
 
-        # Llama a la función para generar el archivo YAML de salida para este job
-        generate_yaml_file "$project" "$timestamp" "$job_name" "$version" "$jira_id"
-    fi
-done < <(sed -n '/^\s*jobs:/,/^ *$/p' "$input_file" | sed '1d;$d')
+    # Resetear variables para el siguiente job
+    job_name=""
+    version=""
+    jira_id=""
+  fi
+done <<< "$jobs"
