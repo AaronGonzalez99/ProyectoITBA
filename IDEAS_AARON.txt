@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Define la nueva versión
-nueva_version="2.0"  # Asigna el valor de la versión aquí
+# Nombre del archivo
+archivo="config.txt"
 
-# Archivo YAML a modificar
-archivo_yaml="ruta_al_archivo.yml"
-
-# Modifica el valor de "version" en el archivo YAML
-sed -i "s/^version: .*/version: ${nueva_version}/" "$archivo_yaml"
+# Usar awk para imprimir solo la sección de jobs
+awk '/jobs:/ {flag=1; next} /:/ && flag {print} /^ *$/ {flag=0}' "$archivo"
