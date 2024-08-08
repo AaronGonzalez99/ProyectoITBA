@@ -1,7 +1,6 @@
-#!/bin/bash
-
-# Nombre del archivo
-archivo="config.txt"
-
-# Usar awk para imprimir solo la sección de jobs
-awk '/jobs:/ {flag=1; next} /:/ && flag {print} /^ *$/ {flag=0}' "$archivo"
+# Busca la palabra clave en el archivo
+if grep -q "$palabra_clave" "$archivo"; then
+    echo "La palabra clave '$palabra_clave' se encuentra en el archivo."
+else
+    echo "La palabra clave '$palabra_clave' NO se encuentra en el archivo."
+fi
