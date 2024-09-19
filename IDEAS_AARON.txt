@@ -1,6 +1,11 @@
-# Busca la palabra clave en el archivo
-if grep -q "$palabra_clave" "$archivo"; then
-    echo "La palabra clave '$palabra_clave' se encuentra en el archivo."
-else
-    echo "La palabra clave '$palabra_clave' NO se encuentra en el archivo."
-fi
+I hope this message finds you well.
+
+I am reaching out to discuss a situation we are currently facing in our production environment (PROD). Recently, after a deployment, we generated Blackduck scans that returned critical results. In our efforts to regularize the PROD environment, we attempted to conduct the same scans in our lower environments; however, the results we obtained did not align with the critical findings from PROD.
+
+This discrepancy in results has raised concerns for us, as it is crucial to understand the root of these differences and ensure that our environment is free from vulnerabilities.
+
+I would greatly appreciate your support in determining what actions we can take in these situations. Any guidance, advice, or additional tools you could provide would be immensely helpful.
+
+Thank you in advance for your attention and assistance. I look forward to your response.
+
+Best regards,
