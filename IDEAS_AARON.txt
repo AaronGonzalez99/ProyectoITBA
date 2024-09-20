@@ -1,11 +1,11 @@
+
+
 I hope this message finds you well.
 
-I am reaching out to discuss a situation we are currently facing in our production environment (PROD). Recently, after a deployment, we generated Blackduck scans that returned critical results. In our efforts to regularize the PROD environment, we attempted to conduct the same scans in our lower environments; however, the results we obtained did not align with the critical findings from PROD.
+I would like to clarify our current process regarding the execution of our Talend builds. Unlike the recommended approach, we do not execute our builds using "Lightspeed templates." Instead, we carry out our processes directly within the Talend tool.
 
-This discrepancy in results has raised concerns for us, as it is crucial to understand the root of these differences and ensure that our environment is free from vulnerabilities.
+As a result of not utilizing the Lightspeed templates for our builds, we understand that we do not have access to the Snyk scans that would typically be generated. Furthermore, we are aware that Snyk is unable to analyze .jar files, which has led us to conduct manual scans using Blackduck as an alternative.
 
-I would greatly appreciate your support in determining what actions we can take in these situations. Any guidance, advice, or additional tools you could provide would be immensely helpful.
+We appreciate your understanding of our situation, and we are open to any recommendations you may have to enhance our scanning processes and ensure compliance with best practices.
 
-Thank you in advance for your attention and assistance. I look forward to your response.
-
-Best regards,
+Thank you for your attention, and I look forward to your response.
