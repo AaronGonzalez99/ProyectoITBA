@@ -1,11 +1,17 @@
-
-
-I hope this message finds you well.
-
-I would like to clarify our current process regarding the execution of our Talend builds. Unlike the recommended approach, we do not execute our builds using "Lightspeed templates." Instead, we carry out our processes directly within the Talend tool.
-
-As a result of not utilizing the Lightspeed templates for our builds, we understand that we do not have access to the Snyk scans that would typically be generated. Furthermore, we are aware that Snyk is unable to analyze .jar files, which has led us to conduct manual scans using Blackduck as an alternative.
-
-We appreciate your understanding of our situation, and we are open to any recommendations you may have to enhance our scanning processes and ensure compliance with best practices.
-
-Thank you for your attention, and I look forward to your response.
+curl -X POST -u "usuario:contraseña" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "title": "Título del Pull Request",
+           "source": {
+             "branch": {
+               "name": "nombre-de-tu-rama"
+             }
+           },
+           "destination": {
+             "branch": {
+               "name": "rama-de-destino"
+             }
+           },
+           "description": "Descripción del Pull Request"
+         }' \
+     "https://api.bitbucket.org/2.0/repositories/{usuario}/{repositorio}/pullrequests"
